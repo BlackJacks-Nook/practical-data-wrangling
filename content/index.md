@@ -24,7 +24,7 @@ This workshop is designed for data practitioners who regularly work with raw or 
 :caption: Software Setup
 :maxdepth: 1
 
-env/
+env/0-setting-up
 :::
 
 
