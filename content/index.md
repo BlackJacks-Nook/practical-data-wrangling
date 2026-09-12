@@ -34,5 +34,5 @@ env/0-setting-up
 :maxdepth: 1
 
 episodes/1-getting-to-know-your-data
-episodes/
+episodes/3-processing-categorical-data
 :::
