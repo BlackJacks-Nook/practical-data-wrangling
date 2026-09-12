@@ -33,5 +33,6 @@ env/0-setting-up
 :caption: Lesson Episodes
 :maxdepth: 1
 
+episodes/1-getting-to-know-your-data
 episodes/
 :::
