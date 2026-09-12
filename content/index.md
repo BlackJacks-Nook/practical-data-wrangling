@@ -34,6 +34,9 @@ env/0-setting-up
 :maxdepth: 1
 
 episodes/1-getting-to-know-your-data
+episodes/2-handling-numerical-data
 episodes/3-processing-categorical-data
+episodes/4-exploring-dates-times-and-time-series-data
+episodes/5-wrangling-text-data
 episodes/6-transforming-image-data
 :::
