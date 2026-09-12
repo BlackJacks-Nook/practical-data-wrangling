@@ -35,4 +35,5 @@ env/0-setting-up
 
 episodes/1-getting-to-know-your-data
 episodes/3-processing-categorical-data
+episodes/6-transforming-image-data
 :::
