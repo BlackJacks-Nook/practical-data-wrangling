@@ -1,0 +1,1021 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "8499d258",
+   "metadata": {},
+   "source": [
+    "# Transforming Image Data"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6cbc3170",
+   "metadata": {},
+   "source": [
+    "We come across image data every day, often without even realizing how much information it contains. From photographs and medical scans to satellite images, social media posts, security cameras, and images captured by our smartphones, visual data has become an important part of our digital world. **Image data is essentially information represented as pixels**, where each pixel contains values that describe properties such as color and intensity. Understanding how images are represented and how we can work with these pixel values is an important first step in computer vision and image-based applications."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "82c27197",
+   "metadata": {},
+   "source": [
+    "In this episode, we will focus on the practical transformation of image data and explore the common steps involved in preparing images for analysis and deep learning applications. We will start by learning how to load and inspect image data, and then move on to important transformations such as resizing, cropping, and geometric transformations like rotation and flipping. We will also explore image augmentation, which helps create useful variations of training images, and finally look at how to prepare and format image data for deep learning models. By the end of the episode, we will have a clear understanding of how raw images can be transformed into useful, model-ready data."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "aa156093",
+   "metadata": {},
+   "source": [
+    "<div class='alert alert-info'>\n",
+    "\n",
+    ":::{objectives}\n",
+    "- Understand how images are represented using pixels, color channels, dimensions, and intensity values.\n",
+    "- Apply common image preprocessing techniques, including resizing, cropping, normalization, and pixel-intensity transformations.\n",
+    "- Perform geometric transformations and image augmentation techniques such as rotation, flipping, translation, and shearing.\n",
+    "- Prepare and format image data for deep learning models, including appropriate channel ordering, tensor shapes, and batch dimensions.\n",
+    ":::\n",
+    "</div>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e884fd0e",
+   "metadata": {},
+   "source": [
+    "<div class='alert alert-success'>\n",
+    "\n",
+    ":::{instructor-note}\n",
+    "- 40 minutes teaching\n",
+    "- 20 minutes exercising/discussion\n",
+    ":::\n",
+    "</div>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "8d9b5583",
+   "metadata": {},
+   "source": [
+    "## 1. Loading & Exploring Image Data"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "17a67035",
+   "metadata": {},
+   "source": [
+    "We first load the image data and display a sample image to get a basic understanding of the dataset."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "74cfa873",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from PIL import Image\n",
+    "import matplotlib.pyplot as plt\n",
+    "\n",
+    "# load and display image\n",
+    "arrhenius = Image.open(\"../images/image-data/arrhenius.jpg\")\n",
+    "\n",
+    "plt.imshow(arrhenius)\n",
+    "plt.axis(\"off\")\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "060e06ea",
+   "metadata": {},
+   "source": [
+    "Before proceeding with further analysis or processing, it is useful to inspect the image dimensions and size. This allows us to understand how the image is represented and determine the number of pixels and channels it contains."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "3cbf6b1e",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# check image dimensions and size\n",
+    "print(\"Image size:\", arrhenius.size)\n",
+    "print(\"Image width:\", arrhenius.width)\n",
+    "print(\"Image height:\", arrhenius.height)\n",
+    "print(\"Image mode:\", arrhenius.mode)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "9b3e4dda",
+   "metadata": {},
+   "source": [
+    "For a typical RGB image, `image.size` returns the width and height in pixels (image dimensions), while `image.mode` tells us how the image data is represented.\n",
+    "- **RGB**: Each pixel stores three values representing its red, green, and blue components.\n",
+    "- **RGBA**: Adds a fourth alpha channel, which controls the transparency of each pixel. Typically, 0 means fully transparent and 255 means fully opaque."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "63ba5a8c",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# load and display image\n",
+    "penguins = Image.open(\"../images/numerical-data/penguins.png\")\n",
+    "\n",
+    "plt.imshow(penguins)\n",
+    "plt.axis(\"off\")\n",
+    "plt.show()\n",
+    "\n",
+    "# check image dimensions and size\n",
+    "print(\"Image size:\", penguins.size)\n",
+    "print(\"Image width:\", penguins.width)\n",
+    "print(\"Image height:\", penguins.height)\n",
+    "print(\"Image mode:\", penguins.mode)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e39936f6",
+   "metadata": {},
+   "source": [
+    "Once we know the image size and format, we can go a step further and ask: **What makes up an image**? The answer is: **pixels**!\n",
+    "- A pixel, short for \"picture element\", is the smallest unit of a digital image. Each pixel contains information about the image, such as its color and brightness.\n",
+    "- For example, the image shown above has an image size of 1600 × 800 pixels. This means that the image contains 1600 pixels along the horizontal axis and 800 pixels along the vertical axis. In other words, the image is made up of a grid containing 1600 columns and 800 rows of pixels."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4d2abb5a",
+   "metadata": {},
+   "source": [
+    "Below is the code used to decompose a color image into its three individual color channels (red, green, and blue), and display the pixel values of the 8 × 8 block in the top-left corner of the green channel image."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "ec24ce25",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "arrhenius = Image.open(\"../images/image-data/arrhenius.jpg\").convert ('RGB')\n",
+    "\n",
+    "# convert image to numpy array and split into three channels\n",
+    "arrhenius_array = np.array(arrhenius)\n",
+    "arrhenius_r, arrhenius_g, arrhenius_b = arrhenius_array[:,:,0], arrhenius_array[:,:,1], arrhenius_array[:,:,2]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "9dec63aa",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# plot three channels\n",
+    "fig, axes = plt.subplots (1, 3, figsize=(15, 4))\n",
+    "axes[0].imshow(arrhenius_r, cmap='Reds')\n",
+    "axes[0].set_title('Red Channel')\n",
+    "axes[0].axis ('off')\n",
+    "\n",
+    "axes[1].imshow(arrhenius_g, cmap='Greens')\n",
+    "axes[1].set_title('Green Channel')\n",
+    "axes[1].axis('off')\n",
+    "\n",
+    "axes[2].imshow(arrhenius_b, cmap='Blues')\n",
+    "axes[2].set_title('Blue Channel')\n",
+    "axes[2].axis ('off')\n",
+    "\n",
+    "plt.tight_layout ()\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "a1646e64",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "print(arrhenius_g[:8, :8])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "a6141766",
+   "metadata": {},
+   "source": [
+    "> For an 8-bit RGB image, the pixel intensity values typically range from 0 to 255. A value of 0 represents no intensity in the selected color channel, while 255 represents the maximum intensity. In this example, each value corresponds to the green intensity of an individual pixel in the 8 × 8 block."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3823fc0c",
+   "metadata": {},
+   "source": [
+    "<div class='alert alert-info'>\n",
+    "\n",
+    ":::{note}\n",
+    "**Image preprocessing** and **data augmentation** involve a series of operations used to prepare and transform images before they are provided to a machine-learning model.\n",
+    "- Preprocessing techniques such as resizing, cropping, normalization, and standardization prepare the images for consistent model input.\n",
+    "- Data augmentation techniques such as rotation, flipping, translation, shearing, and other geometric or photometric transformations introduce controlled variations into the training data.\n",
+    ":::\n",
+    "</div>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "21620780",
+   "metadata": {},
+   "source": [
+    "## 2. Image Resizing & Cropping"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "7580fd99",
+   "metadata": {},
+   "source": [
+    "Once we obtain the pixel values of an image, we can resize and crop the image to different sizes and shapes according to our requirements.\n",
+    "Usually, maintaining the original aspect ratio when resizing an image helps prevent distortion, such as stretching or squashing the objects within the image."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "2d26e4bc",
+   "metadata": {},
+   "source": [
+    "### 2.1 Interpolation methods for image resizing"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "49990d1d",
+   "metadata": {},
+   "source": [
+    "When **resizing** an image, **interpolation** is used to estimate the pixel values that are needed to create the new image dimensions. Common interpolation methods include *nearest-neighbor*, *bilinear*, and *bicubic* interpolation. The choice of interpolation method can affect the quality and appearance of the resized image."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "60b45957",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from PIL import Image\n",
+    "import matplotlib.pyplot as plt\n",
+    "\n",
+    "arrhenius = Image.open(\"../images/image-data/arrhenius.jpg\").convert ('RGB')\n",
+    "\n",
+    "# resize while maintaining aspect ratio\n",
+    "target_width = 128 # change this value to see different effects\n",
+    "scale = target_width / arrhenius.width\n",
+    "target_height = int(arrhenius.height * scale)\n",
+    "\n",
+    "# compare different interpolation methods\n",
+    "nearest = arrhenius.resize((target_width, target_width), Image.Resampling.NEAREST)\n",
+    "bilinear = arrhenius.resize((target_width, target_width),Image.Resampling.BILINEAR)\n",
+    "bicubic = arrhenius.resize((target_width, target_width), Image.Resampling.BICUBIC)\n",
+    "lanczos = arrhenius.resize((target_width, target_width), Image.Resampling.LANCZOS)\n",
+    "box = arrhenius.resize((target_width, target_width),Image.Resampling.BOX)\n",
+    "\n",
+    "# display results\n",
+    "fig, axes = plt.subplots(2, 3, figsize=(12, 8))\n",
+    "\n",
+    "axes[0, 0].imshow(arrhenius); axes[0, 0].set_title(\"Original\")\n",
+    "axes[0, 1].imshow(nearest); axes[0, 1].set_title(\"Nearest\")\n",
+    "axes[0, 2].imshow(bilinear); axes[0, 2].set_title(\"Bilinear\")\n",
+    "axes[1, 0].imshow(bicubic); axes[1, 0].set_title(\"Bicubic\")\n",
+    "axes[1, 1].imshow(lanczos); axes[1, 1].set_title(\"Lanczos\")\n",
+    "axes[1, 2].imshow(box); axes[1, 2].set_title(\"Box\")\n",
+    "\n",
+    "for ax in axes.ravel():\n",
+    "    ax.axis(\"off\")\n",
+    "\n",
+    "plt.tight_layout()\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c1e42300",
+   "metadata": {},
+   "source": [
+    "### 2.2 Cropping images at different locations"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3f1a208b",
+   "metadata": {},
+   "source": [
+    "**Cropping** is another important image-processing operation. It removes portions of an image while retaining the region of interest. A *center crop* extracts a region from the center of the image, whereas a *random crop* selects a region at a randomly chosen location. These techniques are commonly used in image preprocessing and data augmentation."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "fc751053",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import random\n",
+    "\n",
+    "arrhenius = Image.open(\"../images/image-data/arrhenius.jpg\").convert ('RGB')\n",
+    "\n",
+    "crop_size = 128\n",
+    "\n",
+    "# top-left\n",
+    "top_left = arrhenius.crop((0, 0, crop_size, crop_size))\n",
+    "\n",
+    "# bottom-right\n",
+    "bottom_right = arrhenius.crop((\n",
+    "    arrhenius.width - crop_size, arrhenius.height - crop_size,\n",
+    "    arrhenius.width, arrhenius.height\n",
+    "))\n",
+    "\n",
+    "# center\n",
+    "center_crop = arrhenius.crop((\n",
+    "    (arrhenius.width - crop_size) // 2, (arrhenius.height - crop_size) // 2,\n",
+    "    (arrhenius.width + crop_size) // 2, (arrhenius.height + crop_size) // 2\n",
+    "))\n",
+    "\n",
+    "# multi-scale crop 50%\n",
+    "crop_scale = 0.5\n",
+    "crop_width = int(arrhenius.width * crop_scale)\n",
+    "crop_height = int(arrhenius.height * crop_scale)\n",
+    "\n",
+    "left = (arrhenius.width - crop_width) // 2\n",
+    "top = (arrhenius.height - crop_height) // 2\n",
+    "right = left + crop_width\n",
+    "bottom = top + crop_height\n",
+    "\n",
+    "multiscale_crop50 = arrhenius.crop((\n",
+    "    left, top,\n",
+    "    right, bottom\n",
+    "))\n",
+    "\n",
+    "# random crop\n",
+    "max_left = arrhenius.width - crop_size\n",
+    "max_top = arrhenius.height - crop_size\n",
+    "random_left = random.randint(0, max_left)\n",
+    "random_top = random.randint(0, max_top)\n",
+    "\n",
+    "random_crop = arrhenius.crop((\n",
+    "    random_left, random_top,\n",
+    "    random_left + crop_size, random_top + crop_size\n",
+    "))\n",
+    "\n",
+    "# display results\n",
+    "fig, axes = plt.subplots(2, 3, figsize=(12, 8))\n",
+    "\n",
+    "axes[0, 0].imshow(arrhenius); axes[0, 0].set_title(\"Original\")\n",
+    "axes[0, 1].imshow(top_left); axes[0, 1].set_title(\"Top Left\")\n",
+    "axes[0, 2].imshow(bottom_right); axes[0, 2].set_title(\"Bottom Right\")\n",
+    "axes[1, 0].imshow(center_crop); axes[1, 0].set_title(\"Center Crop\")\n",
+    "axes[1, 1].imshow(multiscale_crop50); axes[1, 1].set_title(\"Multiscale - 50%\")\n",
+    "axes[1, 2].imshow(random_crop); axes[1, 2].set_title(\"Random Crop\")\n",
+    "\n",
+    "for ax in axes.ravel():\n",
+    "    ax.axis(\"off\")\n",
+    "\n",
+    "plt.tight_layout()\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "77bde87d",
+   "metadata": {},
+   "source": [
+    "<div class='alert alert-danger'>\n",
+    "\n",
+    ":::{questions} **Why did we resize the image to 224 × 224 pixels**?\n",
+    "- The 224 × 224 pixel dimension is widely used in machine learning and deep learning applications, particularly in image classification models. Using a fixed image size is commonly referred to as **standardizing image dimensions**.\n",
+    "\n",
+    "However, there is no single standard dimension for all images. The appropriate size depends on the model, application, and computational resources.\n",
+    "| Application/model | Common input size |\n",
+    "| :---------------: | :---------------: |\n",
+    "| Image classification | 224 × 224 |\n",
+    "| Some CNN models | 224 × 224 or 299 × 299 |\n",
+    "| Object detection | 320 × 320, 640 × 640, etc. |\n",
+    "| Image generation | Often 512 × 512 or higher |\n",
+    ":::\n",
+    "</div>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "81230b80",
+   "metadata": {},
+   "source": [
+    "<div class='alert alert-danger'>\n",
+    "\n",
+    ":::{questions} **Why standardizing image dimensions matter**?\n",
+    "- Larger images preserve more spatial detail but require more memory and computation. Smaller images are faster to process but may lose important details.\n",
+    "- Standardizing image dimensions ensures that all input images have a consistent shape and size.\n",
+    "- Therefore, selecting an appropriate standard dimension is a trade-off between image quality, computational cost, and model requirements.\n",
+    ":::\n",
+    "</div>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "33c83913",
+   "metadata": {},
+   "source": [
+    "## 3. Pixel & Intensity Transformations"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "945fb507",
+   "metadata": {},
+   "source": [
+    "Once the image has been resized and cropped to the required dimensions, the next step is often to prepare and transform the pixel values. This process is known as **image normalization and preprocessing**. The goal is to make the pixel values more suitable for machine learning and deep learning algorithms while, when needed, improving the visual characteristics of the image."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f1dad933",
+   "metadata": {},
+   "source": [
+    "### 3.1 Normalization of pixel values"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0466dd30",
+   "metadata": {},
+   "source": [
+    "As we have seen from previous code examples, for a typical 8-bit RGB image, each pixel channel has an intensity value ranging from 0 to 255. However, using these relatively large values directly is not always ideal for machine learning or deep learning models.\n",
+    "Therefore, the pixel values should be scaled or normalized to a smaller range. A common approach is to convert the values from the range [0, 255] to [0, 1] by dividing each pixel value by 255. This can improve numerical stability and help machine learning models train more efficiently."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "534450c3",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "arrhenius = Image.open(\"../images/image-data/arrhenius.jpg\").convert ('RGB')\n",
+    "\n",
+    "# convert image to a NumPy array\n",
+    "pixels = np.array(arrhenius)\n",
+    "print(\"Original pixel range:\", pixels.min(), \"to\", pixels.max())\n",
+    "\n",
+    "# scale pixel values from [0, 255] to [0, 1]\n",
+    "scaled_pixels = pixels / 255.0\n",
+    "print(\"Scaled pixel range:\", scaled_pixels.min(), \"to\", scaled_pixels.max())"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ec364c20",
+   "metadata": {},
+   "source": [
+    "Another common normalization approach is *standardization*, where the pixel values are transformed so that they have approximately zero mean and unit variance. The standardized value can be calculated using the formula:\n",
+    "$$ z = \\frac{x-\\mu}{\\sigma} $$\n",
+    "where ($x$) is the original pixel value, ($\\mu$) is the mean pixel value, and ($\\sigma$) is the standard deviation. The appropriate normalization method depends on the machine learning model and the preprocessing procedure used during training."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "3614bf06",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# standardize pixel values\n",
+    "mean = scaled_pixels.mean()\n",
+    "std = scaled_pixels.std()\n",
+    "\n",
+    "standardized_pixels = (scaled_pixels - mean) / std\n",
+    "\n",
+    "print(\"Mean after standardization:\", standardized_pixels.mean())\n",
+    "print(\"Standard deviation after standardization:\", standardized_pixels.std())"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "37414be0",
+   "metadata": {},
+   "source": [
+    "### 3.2 Adjustment of brightness and contrast"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4b96233f",
+   "metadata": {},
+   "source": [
+    "In addition to scaling pixel values, image preprocessing can include adjustments to brightness and contrast.\n",
+    "- **Brightness** controls the overall intensity of an image. Increasing the brightness makes the image appear lighter, while decreasing it makes the image darker.\n",
+    "- **Contrast** controls the difference between light and dark regions. Increasing contrast makes these differences more pronounced, whereas reducing contrast produces a flatter appearance.\n",
+    "\n",
+    "These operations can be useful both for improving image quality and for data augmentation, where variations of the same image are generated to make a model more robust."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "f9ffb2c1",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# brightness adjustment\n",
+    "#\n",
+    "# brightness factor:\n",
+    "# - =1.0 = original brightness\n",
+    "# - >1.0 = brighter\n",
+    "# - <1.0 = darker\n",
+    "\n",
+    "from PIL import ImageEnhance\n",
+    "bright_image = ImageEnhance.Brightness(arrhenius).enhance(2.0)\n",
+    "dark_image = ImageEnhance.Brightness(arrhenius).enhance(0.5)\n",
+    "\n",
+    "fig, axes = plt.subplots(1, 3, figsize=(12, 4))\n",
+    "\n",
+    "axes[0].imshow(arrhenius)\n",
+    "axes[0].set_title(\"Original\")\n",
+    "\n",
+    "axes[1].imshow(bright_image)\n",
+    "axes[1].set_title(\"Increased Brightness\")\n",
+    "\n",
+    "axes[2].imshow(dark_image)\n",
+    "axes[2].set_title(\"Decreased Brightness\")\n",
+    "\n",
+    "for ax in axes.ravel():\n",
+    "    ax.axis(\"off\")\n",
+    "\n",
+    "plt.tight_layout()\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "8377c3f3",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# contrast adjustment\n",
+    "#\n",
+    "# contrast factor:\n",
+    "# - =1.0 = original contrast\n",
+    "# - >1.0 = higher contrast\n",
+    "# - <1.0 = lower contrast\n",
+    "\n",
+    "high_contrast = ImageEnhance.Contrast(arrhenius).enhance(2.0)\n",
+    "low_contrast = ImageEnhance.Contrast(arrhenius).enhance(0.5)\n",
+    "\n",
+    "fig, axes = plt.subplots(1, 3, figsize=(12, 4))\n",
+    "\n",
+    "axes[0].imshow(arrhenius)\n",
+    "axes[0].set_title(\"Original\")\n",
+    "\n",
+    "axes[1].imshow(high_contrast)\n",
+    "axes[1].set_title(\"High Contrast\")\n",
+    "\n",
+    "axes[2].imshow(low_contrast)\n",
+    "axes[2].set_title(\"Low Contrast\")\n",
+    "\n",
+    "for ax in axes.ravel():\n",
+    "    ax.axis(\"off\")\n",
+    "\n",
+    "plt.tight_layout()\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "bee90386",
+   "metadata": {},
+   "source": [
+    "Another frequently used operation is **grayscale conversion**. A color RGB image contains three channels -- red, green, and blue -- whereas a grayscale image contains a single intensity channel. Converting an image to grayscale reduces the amount of data that needs to be processed while preserving information about brightness and structure. Grayscale images are particularly useful when color is not important for the task, such as certain applications involving shape, texture, edges, or object structure."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "f19b6127",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# convert RGB image to grayscale\n",
+    "grayscale_image = arrhenius.convert(\"L\")\n",
+    "\n",
+    "print(\"Grayscale dimensions:\", grayscale_image.size)\n",
+    "print(\"Grayscale mode:\", grayscale_image.mode)\n",
+    "\n",
+    "fig, axes = plt.subplots(1, 3, figsize=(12, 4))\n",
+    "\n",
+    "axes[0].imshow(arrhenius)\n",
+    "axes[0].set_title(\"Original [0, 255]\")\n",
+    "\n",
+    "axes[1].imshow(grayscale_image, cmap=\"gray\")\n",
+    "axes[1].set_title(\"Grayscale\")\n",
+    "\n",
+    "axes[2].imshow(scaled_pixels)\n",
+    "axes[2].set_title(\"Scaled [0, 1]\")\n",
+    "\n",
+    "for ax in axes.ravel():\n",
+    "    ax.axis(\"off\")\n",
+    "\n",
+    "plt.tight_layout()\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "7cbd82f0",
+   "metadata": {},
+   "source": [
+    "<div class='alert alert-warning'>\n",
+    "\n",
+    ":::{warning}\n",
+    "These preprocessing operations -- **normalization**, **scaling**, **brightness adjustment**, **contrast enhancement**, and **grayscale conversion** -- are important steps in preparing images for machine learning and computer vision applications. The specific operations used depend on the requirements of the dataset and the model being trained.\n",
+    ":::\n",
+    "</div>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "fff578ba",
+   "metadata": {},
+   "source": [
+    "## 4. Geometric Transformations"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "21f4200a",
+   "metadata": {},
+   "source": [
+    "After resizing, cropping, and adjusting the pixel values, we can further transform an image by changing its geometric properties. These operations modify the position, orientation, or shape of objects within an image while preserving much of the original visual information.\n",
+    "\n",
+    "**Geometric transformations** are widely used in **image preprocessing** and **data augmentation**, where modified versions of existing images are generated to increase the diversity of the training data and improve the robustness of machine learning models."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "d6411208",
+   "metadata": {},
+   "source": [
+    "### 4.1 Flipping images"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "a8dad923",
+   "metadata": {},
+   "source": [
+    "**Flipping** creates a mirror image by reversing the image along the horizontal or vertical axis.\n",
+    "- A horizontal flip is commonly used to simulate changes in left-right orientation.\n",
+    "- A vertical flip reverses the image from top to bottom.\n",
+    "\n",
+    "However, flipping should only be used when the meaning of the image is not affected by the transformation."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "c29427cb",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# horizontal flipping\n",
+    "horizontal_flip = arrhenius.transpose(Image.Transpose.FLIP_LEFT_RIGHT)\n",
+    "# vertical flipping\n",
+    "vertical_flip = arrhenius.transpose(Image.Transpose.FLIP_TOP_BOTTOM)\n",
+    "\n",
+    "fig, axes = plt.subplots(1, 3, figsize=(12, 4))\n",
+    "\n",
+    "axes[0].imshow(arrhenius)\n",
+    "axes[0].set_title(\"Original\")\n",
+    "\n",
+    "axes[1].imshow(horizontal_flip)\n",
+    "axes[1].set_title(\"Horizontal Flip\")\n",
+    "\n",
+    "axes[2].imshow(vertical_flip)\n",
+    "axes[2].set_title(\"Vertical Flip\")\n",
+    "\n",
+    "for ax in axes.ravel():\n",
+    "    ax.axis(\"off\")\n",
+    "\n",
+    "plt.tight_layout()\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3940c565",
+   "metadata": {},
+   "source": [
+    "### 4.2 Translation and shearing images"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "5b1d8eea",
+   "metadata": {},
+   "source": [
+    "**Translation** moves the contents of an image horizontally or vertically without changing their size or orientation. For example, an object can be shifted 40 pixels to the right and 80 pixels downward. Translation helps models become less sensitive to the exact position of an object within an image.\n",
+    "\n",
+    "**Shearing** shifts different parts of an image by different amounts, producing a slanted or skewed appearance. Unlike rotation, which preserves the angles between lines, shearing changes the geometric relationships between them. Shearing can simulate changes in viewpoint or perspective and can therefore be useful as a data-augmentation technique."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "aa0b5c60",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# translation\n",
+    "# move image 40 pixels to right and 80 pixels downward\n",
+    "translated_image = Image.new(\"RGB\", arrhenius.size)\n",
+    "translated_image.paste(arrhenius, (40, 80))\n",
+    "\n",
+    "# shearing\n",
+    "# PIL uses an affine transformation for shearing.\n",
+    "# Transformation matrix is:\n",
+    "# - x' = x + shear_x * y\n",
+    "# - y' = y\n",
+    "# Here, shear_x = 0.5\n",
+    "\n",
+    "width, height = arrhenius.size\n",
+    "sheared_image = arrhenius.transform(\n",
+    "    (width, height),\n",
+    "    Image.Transform.AFFINE,\n",
+    "    (1, 0.5, 0,\n",
+    "     0, 1, 0),\n",
+    "    resample=Image.Resampling.BICUBIC\n",
+    ")\n",
+    "\n",
+    "fig, axes = plt.subplots(1, 3, figsize=(12, 4))\n",
+    "\n",
+    "axes[0].imshow(arrhenius)\n",
+    "axes[0].set_title(\"Original\")\n",
+    "\n",
+    "axes[1].imshow(translated_image)\n",
+    "axes[1].set_title(\"Translation\")\n",
+    "\n",
+    "axes[2].imshow(sheared_image)\n",
+    "axes[2].set_title(\"Shearing\")\n",
+    "\n",
+    "for ax in axes.ravel():\n",
+    "    ax.axis(\"off\")\n",
+    "\n",
+    "plt.tight_layout()\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "31c07721",
+   "metadata": {},
+   "source": [
+    "### 4.3 Affine transformation"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "83bce82d",
+   "metadata": {},
+   "source": [
+    "An **affine transformation** is a more general geometric transformation that combines operations such as translation, rotation, scaling, and shearing. It can be represented mathematically using a transformation matrix. An affine transformation preserves straight lines and parallel lines, although angles, distances, and shapes may change. This makes affine transformations particularly useful for creating realistic variations of training images."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "f6c6a9ce",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# an affine transformation can combine scaling, shearing, rotation, and translation.\n",
+    "# example matrix:\n",
+    "# x' = a*x + b*y + c\n",
+    "# y' = d*x + e*y + f\n",
+    "\n",
+    "affine_image = arrhenius.transform(\n",
+    "    (width, height),\n",
+    "    Image.Transform.AFFINE,\n",
+    "    (1.0, 0.2, -20,\n",
+    "     0.1, 1.0, -10),\n",
+    "    resample=Image.Resampling.BICUBIC\n",
+    ")\n",
+    "\n",
+    "fig, axes = plt.subplots(1, 2, figsize=(8, 4))\n",
+    "\n",
+    "axes[0].imshow(arrhenius)\n",
+    "axes[0].set_title(\"Original\")\n",
+    "\n",
+    "axes[1].imshow(affine_image)\n",
+    "axes[1].set_title(\"Affine Transformation\")\n",
+    "\n",
+    "for ax in axes.ravel():\n",
+    "    ax.axis(\"off\")\n",
+    "\n",
+    "plt.tight_layout()\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "01b8d2d3",
+   "metadata": {},
+   "source": [
+    "These geometric transformations are important because real-world images rarely have identical orientations, positions, or shapes. By applying controlled transformations such as rotation, flipping, translation, and shearing, we can generate more diverse training examples without collecting additional images. Such a process is commonly referred to as **data augmentation**."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "11a4efc5",
+   "metadata": {},
+   "source": [
+    "<div class='alert alert-warning'>\n",
+    "\n",
+    ":::{callout}\n",
+    "**Data augmentation** is a technique used to artificially increase the diversity of a training dataset by applying controlled transformations to existing images.\n",
+    "- Instead of collecting new images, we create modified versions of the original images while preserving their important visual characteristics.\n",
+    "- Common image augmentation techniques include horizontal flipping, rotation, cropping, translation, scaling, brightness/contrast adjustment, and adding small amounts of noise.\n",
+    "- These transformations help a machine-learning model become more robust to variations in image orientation, position, scale, and lighting, which can help reduce overfitting and improve generalization to unseen images.\n",
+    ":::\n",
+    "</div>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "23a76c67",
+   "metadata": {},
+   "source": [
+    "<div class='alert alert-warning'>\n",
+    "\n",
+    ":::{warning}\n",
+    "**One important consideration is that not every augmentation is appropriate for every dataset**. For example, a vertical flip may be inappropriate for photographs of people or buildings because an upside-down image may not represent a realistic situation. Similarly, excessive rotation, cropping, or color changes can alter the meaning of an image rather than simply creating a useful variation.\n",
+    ":::\n",
+    "</div>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "93babb5a",
+   "metadata": {},
+   "source": [
+    "<div class='alert alert-warning'>\n",
+    "\n",
+    ":::{callout} **Augmentation strategy**\n",
+    "\n",
+    "A regular strategy to perform image augmentations follows the ordr listed below.\n",
+    "**Original image → Resize → Random crop → Random rotation → Random flip → Color adjustment → Normalize → Model**.\n",
+    "\n",
+    "The important point is that you don't necessarily apply every transformation to every image. Instead, transformations are usually selected randomly with specified probabilities and ranges.\n",
+    ":::\n",
+    "</div>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "b9cf0b58",
+   "metadata": {},
+   "source": [
+    "## 5. Image Formatting & Preprocessing"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e2b81752",
+   "metadata": {},
+   "source": [
+    "When working with color images, it is important to understand how the color channels are stored and represented. A standard RGB image contains three channels: red, green, and blue. However, different image-processing libraries and machine-learning frameworks may use different channel orderings. For example, PIL and Matplotlib typically use RGB ordering, whereas OpenCV uses BGR ordering by default. Therefore, an image loaded using OpenCV may appear to have incorrect colors if it is displayed directly using a library that expects RGB ordering."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "df684860",
+   "metadata": {},
+   "source": [
+    "In addition to channel ordering, the position of the channel dimension can also vary. A typical image-processing representation may use **height × width × channels** (H × W × C), such as in TensorFlow/Keras framework, while many deep-learning frameworks, particularly PyTorch, use **channels × height × width** (C × H × W). Understanding these conventions is important because an incorrect channel order or tensor shape can lead to incorrect model inputs and unexpected results.\n",
+    "\n",
+    "When processing a batch of images, an additional batch dimension is added, resulting in N × C × H × W, where N represents the number of images in the batch."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "e8e72507",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# a simple TensorFlow/Keras example\n",
+    "# showing Height × Width × Channels (H × W × C) convention\n",
+    "import tensorflow as tf\n",
+    "import numpy as np\n",
+    "\n",
+    "# create one RGB image: Height × Width × Channels\n",
+    "image = np.zeros((224, 224, 3), dtype=np.float32) # HWC\n",
+    "print(\"Image shape:\", image.shape)\n",
+    "\n",
+    "model = tf.keras.Sequential([\n",
+    "    tf.keras.layers.Input(shape=(224, 224, 3)), # HWC\n",
+    "    tf.keras.layers.Conv2D(32, 3, activation=\"relu\"),\n",
+    "])\n",
+    "\n",
+    "model.summary()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c4c2d521",
+   "metadata": {},
+   "source": [
+    "Conv2D(32, 3) applies 32 filters, where each filter has a 3 × 3 spatial kernel. Each filter produces one feature map."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "baa7e17d",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# a simple PyTorch example\n",
+    "# showing Channels × Height × Width (C × H × W) convention\n",
+    "\n",
+    "import torch\n",
+    "import torch.nn as nn\n",
+    "\n",
+    "# create one RGB image: Channels × Height × Width\n",
+    "image = torch.zeros((3, 224, 224), dtype=torch.float32)  # CHW\n",
+    "print(\"Image shape:\", image.shape)\n",
+    "\n",
+    "model = nn.Sequential(\n",
+    "    nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3)\n",
+    ")\n",
+    "\n",
+    "print(model)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "8861abc2",
+   "metadata": {},
+   "source": [
+    "in_channels=3 → the input image has 3 channels (RGB)\n",
+    "out_channels=32 → create 32 filters\n",
+    "kernel_size=3 → each filter has a 3 × 3 spatial kernel"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "171e45b7",
+   "metadata": {},
+   "source": [
+    "<div class='alert alert-info'>\n",
+    "\n",
+    ":::{keypoints}\n",
+    "- Load and explore image data, including image dimensions, color modes, channels, and pixel values.\n",
+    "- Resize and crop images using different interpolation methods and cropping strategies to obtain the required image dimensions and regions of interest.\n",
+    "- Transform and normalize pixel values through normalization, standardization, brightness and contrast adjustment, and grayscale conversion.\n",
+    "- Apply geometric transformations and data augmentation, including rotation, flipping, translation, shearing, and affine transformations.\n",
+    "- Format and preprocess images for deep learning, including channel ordering, tensor dimensions, and batch representations such as H × W × C and N × C × H × W.\n",
+    ":::\n",
+    "</div>"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "practical_data_wraggling",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.11.16"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

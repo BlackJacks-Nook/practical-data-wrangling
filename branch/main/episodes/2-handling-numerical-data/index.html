@@ -1,0 +1,660 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Handling Numerical Data &mdash; Practical Data Wrangling</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=9c3e77be" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx_lesson.css?v=e9df6548" />
+      <link rel="stylesheet" type="text/css" href="../../_static/term_role_formatting.css?v=4194e21c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx_rtd_theme_ext_color_contrast.css?v=8e8ea19f" />
+      <link rel="stylesheet" type="text/css" href="../../_static/overrides.css?v=77c0d755" />
+
+  
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=187304be"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=35a8b989"></script>
+      <script src="../../_static/minipres.js?v=a0d29692"></script>
+      <script>let toggleHintShow = 'Click to show';</script>
+      <script>let toggleHintHide = 'Click to hide';</script>
+      <script>let toggleOpenOnPrint = 'true';</script>
+      <script src="../../_static/togglebutton.js?v=b8b12719"></script>
+      <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex/" />
+    <link rel="search" title="Search" href="../../search/" />
+    <link rel="next" title="Processing Categorical Data" href="../3-processing-categorical-data/" />
+    <link rel="prev" title="Getting to Know Your Data" href="../1-getting-to-know-your-data/" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../" class="icon icon-home">
+            Practical Data Wrangling
+              <img src="../../_static/blackjack-s-nook.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Software Setup</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../env/0-setting-up/">Setting Up Programming Environment</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Lesson Episodes</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../1-getting-to-know-your-data/">Getting to Know Your Data</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Handling Numerical Data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#the-palmer-penguins-dataset">1. The Palmer Penguins Dataset</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#loading-dataset">1.1 Loading dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#getting-statistics">1.2 Getting statistics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#data-visualization">1.3 Data visualization</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#imputating-missing-values">2. Imputating Missing Values</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#dropping-missing-observations">2.1 Dropping missing observations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#imputation-of-missing-values">2.2 Imputation of missing values</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#handling-outliers">3. Handling Outliers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#imputating-missing-values-with-extreme-data">3.1 Imputating missing values with extreme data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#the-inter-quartile-range-iqr-method">3.2 The Inter quartile range (IQR) method</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#scaling-normalizing-numerical-data">4. Scaling &amp; Normalizing Numerical Data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#standardization-z-score-normalization">4.1 Standardization (Z-score Normalization)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#normalization-min-max-scaling">4.2 Normalization (Min-Max Scaling)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../3-processing-categorical-data/">Processing Categorical Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../4-exploring-dates-times-and-time-series-data/">Exploring Dates, Times, and Time-Series Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../5-wrangling-text-data/">Wrangling Text Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../6-transforming-image-data/">Transforming Image Data</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../">Practical Data Wrangling</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Handling Numerical Data</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/BlackJacks-Nook/content/blob/main/content/episodes/2-handling-numerical-data.ipynb" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="handling-numerical-data">
+<h1>Handling Numerical Data<a class="headerlink" href="#handling-numerical-data" title="Link to this heading"></a></h1>
+<p>Numerical data is widely used in data analysis, machine learning, business intelligence, scientific research, and many other fields. From sales figures and customer ages to temperatures, prices, measurements, and performance scores, numerical values help us identify patterns, compare observations, and make data-driven decisions. However, numerical data is rarely ready to use straight away. Real-world datasets often contain missing values, unusual observations, inconsistent scales, or unnecessary rows and columns that need to be addressed before analysis.</p>
+<p>In this episode, we take a hands-on approach to handling numerical data. We will work through practical steps including getting basic statistics to understand a dataset, identifying and handling missing values, adding and deleting rows and columns, scaling and normalizing numerical features, and detecting and handling outliers. Rather than focusing heavily on theory, we will apply each technique to a dataset and see how these transformations affect the data, preparing it for further analysis or machine learning.</p>
+<div class='alert alert-info'>
+<div class="admonition-objectives objectives admonition" id="objectives-0">
+<p class="admonition-title">Objectives</p>
+<ul class="simple">
+<li><p>Explore and summarize numerical features in the Palmer Penguins dataset.</p></li>
+<li><p>Identify and handle missing values in numerical variables.</p></li>
+<li><p>Identify and handle outliers in numerical data.</p></li>
+<li><p>Apply normalization and standardization techniques to numerical features.</p></li>
+<li><p>Prepare clean and appropriately scaled numerical data for machine learning.</p></li>
+</ul>
+</div>
+</div><div class='alert alert-success'>
+<div class="admonition-instructor-note instructor-note admonition" id="instructor-note-0">
+<p class="admonition-title">Instructor note</p>
+<ul class="simple">
+<li><p>XX minutes teaching</p></li>
+<li><p>XX minutes exercising/discussion</p></li>
+</ul>
+</div>
+</div><section id="the-palmer-penguins-dataset">
+<h2>1. The Palmer Penguins Dataset<a class="headerlink" href="#the-palmer-penguins-dataset" title="Link to this heading"></a></h2>
+<p><a class="reference external" href="https://zenodo.org/records/3960218">The Palmer Penguins dataset</a> is a widely used open dataset in data science and ML education. This dataset contains information on three penguin species that inhabit islands near the Palmer Archipelago in Antarctica: Adelie, Chinstrap, and Gentoo. Each row in the dataset corresponds to a single penguin and records both physical measurements and categorical attributes. The key numerical features include flipper length (mm), culmen length and depth (bill measurements, in mm), and body mass (g). Alongside these, categorical variables such as species, island, and sex are provided.</p>
+<p>These data were collected from 2007 - 2009 by Dr. Kristen Gorman with the <a class="reference external" href="https://lternet.edu/site/palmer-antarctica-lter/">Palmer Station Long Term Ecological Research Program</a>, part of the <a class="reference external" href="https://lternet.edu/">US Long Term Ecological Research Network</a>. It contains measurements for 344 penguins from three species – Adelie, Chinstrap, and Gentoo – collected from three islands (Biscoe, Dream, and Torgersen) in the Palmer Archipelago, Antarctica.</p>
+<p>The data were imported directly from the <a class="reference external" href="https://edirepository.org/">Environmental Data Initiative (EDI)</a> Data Portal, and are available for use by CC0 license (“No Rights Reserved”) in accordance with the <a class="reference external" href="https://lternet.edu/data-access-policy/">Palmer Station Data Policy</a>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">IPython.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">display</span>
+<span class="n">display</span><span class="p">(</span><span class="n">Image</span><span class="p">(</span><span class="s2">"../images/numerical-data/penguins.png"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1240</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="loading-dataset">
+<h3>1.1 Loading dataset<a class="headerlink" href="#loading-dataset" title="Link to this heading"></a></h3>
+<p>Seaborn provides the Penguins dataset through its built-in data-loading functions. We can access it using <code class="docutils literal notranslate"><span class="pre">sns.load_dataset('penguin')</span></code> and then have a quick look at the data.</p>
+<div class='alert alert-info'>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you have your own dataset stored in a CSV file, you can easily load it into Python using Pandas with the <code class="docutils literal notranslate"><span class="pre">read_csv()</span></code> function. This is one of the most common ways to bring tabular data into a DataFrame for further analysis and processing.</p>
+<p>Beyond CSV files, Pandas also supports a wide variety of other file formats, making it a powerful and flexible tool for data handling. For example, you can use <code class="docutils literal notranslate"><span class="pre">read_excel()</span></code> to import data from Microsoft Excel spreadsheets, <code class="docutils literal notranslate"><span class="pre">read_hdf()</span></code> to work with HDF5 binary stores, and <code class="docutils literal notranslate"><span class="pre">read_json()</span></code> to load data from JSON files. Each of these formats also has a corresponding method for saving data back to disk, such as <code class="docutils literal notranslate"><span class="pre">to_csv()</span></code>, <code class="docutils literal notranslate"><span class="pre">to_excel()</span></code>, <code class="docutils literal notranslate"><span class="pre">to_hdf()</span></code>, and <code class="docutils literal notranslate"><span class="pre">to_json()</span></code>.</p>
+</div>
+</div><div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">seaborn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sns</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># penguins = pd.read_csv("./penguins_dataset.csv")</span>
+
+<span class="c1"># URL of the Penguins dataset (CSV file)</span>
+<span class="c1"># url = "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/penguins.csv"</span>
+<span class="c1"># penguins = pd.read_csv(url)</span>
+
+<span class="n">penguins</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">load_dataset</span><span class="p">(</span><span class="s1">'penguins'</span><span class="p">)</span>
+<span class="n">penguins</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="getting-statistics">
+<h3>1.2 Getting statistics<a class="headerlink" href="#getting-statistics" title="Link to this heading"></a></h3>
+<p>Once we have imported the Penguins dataset, our first step is to understand which columns contain numerical data. In this dataset, there are seven columns. Variables such as <code class="docutils literal notranslate"><span class="pre">bill_length_mm</span></code>, <code class="docutils literal notranslate"><span class="pre">bill_depth_mm</span></code>, <code class="docutils literal notranslate"><span class="pre">flipper_length_mm</span></code>, and <code class="docutils literal notranslate"><span class="pre">body_mass_g</span></code> are numerical, while columns such as <code class="docutils literal notranslate"><span class="pre">species</span></code>, <code class="docutils literal notranslate"><span class="pre">island</span></code>, and <code class="docutils literal notranslate"><span class="pre">sex</span></code> are categorical.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">penguins</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>For columns with numverical variables, we can summarize using statistics such as the <code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">median</span></code>, <code class="docutils literal notranslate"><span class="pre">minimum</span></code>, <code class="docutils literal notranslate"><span class="pre">maximum</span></code>, and standard deviation via <code class="docutils literal notranslate"><span class="pre">.describe()</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">penguins</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>For example, if we look at <code class="docutils literal notranslate"><span class="pre">body_mass_g</span></code>, we might see that the mean is somewhere around 4,200 grams. This tells us the average body mass of the penguins in the available observations. The minimum and maximum tell us the range of observed body masses, while the quartiles tell us how the observations are distributed within that range.</p>
+<p>Quartiles divide the ordered data into sections. The 25th percentile, or Q1, tells us the value below which approximately 25% of observations fall. The median divides the data in half, and Q3 marks approximately the 75th percentile. The distance between Q1 and Q3 is called the interquartile range (<strong>IQR</strong>). The IQR is useful because it describes the spread of the middle 50% of our observations and is less influenced by extreme values.</p>
+<p>If the <code class="docutils literal notranslate"><span class="pre">mean</span></code> and <code class="docutils literal notranslate"><span class="pre">median</span></code> (50%) are relatively close, that can suggest that the distribution is reasonably balanced. If they are noticeably different, it may indicate that the data is skewed or that some unusually large or small observations are affecting the <code class="docutils literal notranslate"><span class="pre">mean</span></code>.</p>
+</section>
+<section id="data-visualization">
+<h3>1.3 Data visualization<a class="headerlink" href="#data-visualization" title="Link to this heading"></a></h3>
+<p>Looking only at the raw numbers in the <code class="docutils literal notranslate"><span class="pre">penguins</span></code> DataFrame, or even examining the statistical summaries provided by <code class="docutils literal notranslate"><span class="pre">penguins.info()</span></code> and <code class="docutils literal notranslate"><span class="pre">penguins.describe()</span></code>, often does not give us a clear intuition about the patterns and relationships in the data. To truly understand the dataset, we generally prefer to visualize the data, since graphical representations can reveal trends, groupings, and anomalies that may remain hidden in numerical summaries alone.</p>
+<p>One nice visualization for datasets with relatively few attributes is <strong>Pair Plot</strong>, which can be created using <code class="docutils literal notranslate"><span class="pre">sns.pairplot(...)</span></code>. It shows a scatterplot of each attribute plotted against each of the other attributes. By using the <code class="docutils literal notranslate"><span class="pre">hue='species'</span></code> setting for the pairplot the graphs on the diagonal are layered kernel density estimate plots for the different values of the <code class="docutils literal notranslate"><span class="pre">species</span></code> column.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sns</span><span class="o">.</span><span class="n">pairplot</span><span class="p">(</span><span class="n">penguins</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s2">"sex"</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sns</span><span class="o">.</span><span class="n">pairplot</span><span class="p">(</span><span class="n">penguins</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s2">"island"</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sns</span><span class="o">.</span><span class="n">pairplot</span><span class="p">(</span><span class="n">penguins</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s2">"species"</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class='alert alert-warning'>
+<div class="admonition-discussion discussion important admonition" id="discussion-0">
+<p class="admonition-title">Discussion</p>
+<p>Take a look at the pairplot we created. Consider the following questions:</p>
+<ul class="simple">
+<li><p>Is there any class that is easily distinguishable from the others?</p></li>
+<li><p>Which combination of attributes shows the best separation for all 3 class labels at once?</p></li>
+<li><p>For pairplot with <code class="docutils literal notranslate"><span class="pre">hue=&quot;sex&quot;</span></code>, which combination of features distinguishes the two sexes best?</p></li>
+<li><p>What about the one with <code class="docutils literal notranslate"><span class="pre">hue=&quot;island&quot;</span></code>?</p></li>
+</ul>
+</div>
+</div>
+</section>
+</section>
+<section id="imputating-missing-values">
+<h2>2. Imputating Missing Values<a class="headerlink" href="#imputating-missing-values" title="Link to this heading"></a></h2>
+<p>After getting a statistical overview of our numerical variables, the next issue we need to investigate is missing data. In a real-world dataset, it is common for some measurements to be unavailable. In the Penguins dataset, for example, some penguins may have a missing <code class="docutils literal notranslate"><span class="pre">body_mass_g</span></code>, <code class="docutils literal notranslate"><span class="pre">flipper_length_mm</span></code>, or another measurement.</p>
+<p>Missing values matter because many calculations and machine-learning algorithms cannot work directly with incomplete data. Before deciding what to do with missing values, however, we first need to find them and understand how much data is actually missing. The important point is that we should inspect the missing data before automatically deleting or replacing anything.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># check whether each column contains missing values</span>
+<span class="n">penguins</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># total missing values in the entire dataset</span>
+<span class="n">penguins</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>To focus specifically on numerical columns:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">numericals</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"body_mass_g"</span><span class="p">,</span> <span class="s2">"bill_length_mm"</span><span class="p">,</span> <span class="s2">"bill_depth_mm"</span><span class="p">,</span> <span class="s2">"flipper_length_mm"</span><span class="p">]</span>
+<span class="n">penguins_numericals</span> <span class="o">=</span> <span class="n">penguins</span><span class="p">[</span><span class="n">numericals</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">penguins_numericals</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">penguins_numericals</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="dropping-missing-observations">
+<h3>2.1 Dropping missing observations<a class="headerlink" href="#dropping-missing-observations" title="Link to this heading"></a></h3>
+<p>Sometimes we only care about missing values in a particular numerical variable. For example, suppose we want to<br />
+This is useful because it allows us to inspect the actual observations rather than treating missing values as abstract numbers.</p>
+<p>At this point, we should ask an important question: Should we delete these rows, or should we fill in the missing values?
+One straightforward approach is to remove rows containing missing values. Pandas provides <code class="docutils literal notranslate"><span class="pre">.dropna()</span></code> for this.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"Original shape:"</span><span class="p">,</span> <span class="n">penguins_numericals</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="n">penguins_numericals_dropna</span> <span class="o">=</span> <span class="n">penguins_numericals</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"New shape:"</span><span class="p">,</span> <span class="n">penguins_numericals_dropna</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+<span class="n">penguins_numericals_dropna</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class='alert alert-warning'>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">dropna()</span></code> is easy to use, but “easy” does not necessarily mean “appropriate”.
+The decision to drop rows should therefore depend on the situation. If only a small number of observations are missing and those observations are not critical, dropping them may be perfectly reasonable. But if many observations are missing, deleting them could significantly reduce our dataset and potentially introduce bias.</p>
+</div>
+</div></section>
+<section id="imputation-of-missing-values">
+<h3>2.2 Imputation of missing values<a class="headerlink" href="#imputation-of-missing-values" title="Link to this heading"></a></h3>
+<p>Another option is to impute the missing values with a suitable estimate. Common choices include the <code class="docutils literal notranslate"><span class="pre">mean</span></code> or <code class="docutils literal notranslate"><span class="pre">median</span></code> of that column, depending on the distribution.
+Here we calculate <code class="docutils literal notranslate"><span class="pre">mean</span></code> and <code class="docutils literal notranslate"><span class="pre">median</span></code> values for numerical features. To illustrate this process, we take <code class="docutils literal notranslate"><span class="pre">body_mass_g</span></code> feature as an example.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">body_mass_g_mean</span> <span class="o">=</span> <span class="n">penguins_numericals</span><span class="o">.</span><span class="n">body_mass_g</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="n">body_mass_g_median</span> <span class="o">=</span> <span class="n">penguins_numericals</span><span class="o">.</span><span class="n">body_mass_g</span><span class="o">.</span><span class="n">median</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  mean value of body_mass_g is </span><span class="si">{</span><span class="n">body_mass_g_mean</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"median value of body_mass_g is </span><span class="si">{</span><span class="n">body_mass_g_median</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Rather than directly replacing missing values, we concatenate new columns containing <code class="docutils literal notranslate"><span class="pre">mean</span></code> and <code class="docutils literal notranslate"><span class="pre">median</span></code> values for the <code class="docutils literal notranslate"><span class="pre">body_mass_g</span></code> feature to end of Penguins dataset, and than visualize distribution of this feature.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">penguins_numericals</span><span class="p">[</span><span class="s1">'BMG_mean'</span><span class="p">]</span> <span class="o">=</span> <span class="n">penguins_numericals</span><span class="o">.</span><span class="n">body_mass_g</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">body_mass_g_mean</span><span class="p">)</span>
+<span class="n">penguins_numericals</span><span class="p">[</span><span class="s1">'BMG_median'</span><span class="p">]</span> <span class="o">=</span> <span class="n">penguins_numericals</span><span class="o">.</span><span class="n">body_mass_g</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">body_mass_g_median</span><span class="p">)</span>
+<span class="n">penguins_numericals</span><span class="o">.</span><span class="n">head</span><span class="p">()</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">highlight_null</span><span class="p">(</span><span class="n">color</span> <span class="o">=</span> <span class="s1">'green'</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+
+<span class="n">penguins_numericals</span><span class="p">[</span><span class="s1">'body_mass_g'</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">'kde'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'tab:green'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"body_mass_g"</span><span class="p">)</span>
+<span class="n">penguins_numericals</span><span class="p">[</span><span class="s1">'BMG_mean'</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">'kde'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'tab:orange'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"BMG_mean"</span><span class="p">)</span>
+<span class="n">penguins_numericals</span><span class="p">[</span><span class="s1">'BMG_median'</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">kind</span><span class="o">=</span><span class="s1">'kde'</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'tab:blue'</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"BMG_median"</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">'best'</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class='alert alert-warning'>
+<div class="admonition-mean-or-median-imputation callout admonition" id="callout-0">
+<p class="admonition-title">Mean or median imputation</p>
+<ul class="simple">
+<li><p>Mean imputation is simple and can work well when the data is reasonably balanced and the missing values are not strongly associated with unusual observations.</p>
+<ul>
+<li><p>But there is an important limitation: the mean can be affected by extreme values. If a numerical variable is strongly skewed or contains outliers, the mean may not represent a typical observation very well.</p></li>
+</ul>
+</li>
+<li><p>In such situation, the median becomes particularly useful. The median is less sensitive to extreme values than the mean, so it can often be a better choice when numerical data is skewed or contains outliers.</p></li>
+</ul>
+<p>The key lesson is that missing-value handling is not simply a technical step. We need to make a decision based on how much data is missing, where it is missing, and what effect removing or replacing it might have on our analysis.</p>
+</div>
+</div></section>
+</section>
+<section id="handling-outliers">
+<h2>3. Handling Outliers<a class="headerlink" href="#handling-outliers" title="Link to this heading"></a></h2>
+<p>After getting statistical information from the Penguins dataset, the next step is to look more carefully at the unusual observations.</p>
+<p>An <strong>outlier</strong> is a value that is unusually far from the other observations. For instance, if body mass of most of penguins in dataset varies between 3000-6000 g, an observation of 7500 g will be considered as an outlier since such an observation occurs rarely.</p>
+<p>Outliers can occur because of measurement errors, data-entry mistakes, unusual but genuine cases, or because the population itself naturally contains extreme observations. Therefore, we should not automatically delete an outlier just because it looks unusual. Instead, we first identify it, investigate it, understand its impact, and then decide whether to retain, remove, or transform it.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">penguins_numericals</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="imputating-missing-values-with-extreme-data">
+<h3>3.1 Imputating missing values with extreme data<a class="headerlink" href="#imputating-missing-values-with-extreme-data" title="Link to this heading"></a></h3>
+<p>In the code snippet below, we create a new column for <code class="docutils literal notranslate"><span class="pre">body_mass_g</span></code> and impute its missing values using the extreme <strong>end of the distribution</strong> (EoD). Here, the EoD is defined as the mean plus three standard deviations, calculated as <code class="docutils literal notranslate"><span class="pre">mean</span> <span class="pre">+</span> <span class="pre">(3</span> <span class="pre">*</span> <span class="pre">std)</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">eod_value</span> <span class="o">=</span> <span class="n">penguins</span><span class="p">[</span><span class="s1">'body_mass_g'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">penguins</span><span class="p">[</span><span class="s1">'body_mass_g'</span><span class="p">]</span><span class="o">.</span><span class="n">std</span><span class="p">()</span> <span class="o">+</span> <span class="mi">200</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">eod_value</span><span class="p">)</span>
+
+<span class="n">penguins_numericals</span><span class="p">[</span><span class="s1">'species'</span><span class="p">]</span> <span class="o">=</span> <span class="n">penguins</span><span class="p">[</span><span class="s1">'species'</span><span class="p">]</span>
+<span class="n">penguins_numericals</span><span class="p">[</span><span class="s1">'BMG_EoD'</span><span class="p">]</span> <span class="o">=</span> <span class="n">penguins_numericals</span><span class="p">[</span><span class="s1">'body_mass_g'</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">eod_value</span><span class="p">)</span>
+<span class="n">penguins_numericals</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">highlight_null</span><span class="p">(</span><span class="n">color</span> <span class="o">=</span> <span class="s1">'green'</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">swarmplot</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">penguins_numericals</span><span class="p">[</span><span class="s2">"species"</span><span class="p">],</span> <span class="n">x</span><span class="o">=</span><span class="n">penguins_numericals</span><span class="p">[</span><span class="s2">"BMG_EoD"</span><span class="p">],</span>
+              <span class="n">color</span><span class="o">=</span><span class="s2">"lightgreen"</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">"o"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">boxplot</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">penguins_numericals</span><span class="p">[</span><span class="s2">"species"</span><span class="p">],</span> <span class="n">x</span><span class="o">=</span><span class="n">penguins_numericals</span><span class="p">[</span><span class="s2">"BMG_EoD"</span><span class="p">],</span> 
+            <span class="n">palette</span><span class="o">=</span><span class="s2">"coolwarm"</span><span class="p">,</span> <span class="n">notch</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> 
+            <span class="n">hue</span><span class="o">=</span><span class="n">penguins_numericals</span><span class="o">.</span><span class="n">species</span><span class="p">,</span> <span class="n">legend</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">"Body mass (g)"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">"Species"</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">'x'</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">'y'</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>There are several approaches to identify outliers, and two of most commonly used methods are <strong>Interquartile Range (IQR)</strong> method and <strong>Mean-Standard Deviation</strong> method.</p>
+</section>
+<section id="the-inter-quartile-range-iqr-method">
+<h3>3.2 The Inter quartile range (IQR) method<a class="headerlink" href="#the-inter-quartile-range-iqr-method" title="Link to this heading"></a></h3>
+<p>IQR measures spread of middle 50% of data and is calculated by subtracting 1st quartile (25th percentile, Q1) from 3rd quartile (75th percentile, Q3).</p>
+<ul class="simple">
+<li><p>Once IQR is obtained, we can determine boundaries for detecting outliers.</p></li>
+<li><p>Lower limit is defined as Q1 minus 1.5 times IQR.</p></li>
+<li><p>Upper limit is defined as Q3 plus 1.5 times IQR.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">penguins_numericals</span><span class="o">.</span><span class="n">body_mass_g</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"25% quantile = </span><span class="si">{</span><span class="n">penguins_numericals</span><span class="p">[</span><span class="s1">'body_mass_g'</span><span class="p">]</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="mf">0.25</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"75% quantile = </span><span class="si">{</span><span class="n">penguins_numericals</span><span class="p">[</span><span class="s1">'body_mass_g'</span><span class="p">]</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="mf">0.75</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+
+<span class="n">IQR</span> <span class="o">=</span> <span class="n">penguins_numericals</span><span class="p">[</span><span class="s2">"body_mass_g"</span><span class="p">]</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="mf">0.75</span><span class="p">)</span> <span class="o">-</span> <span class="n">penguins_numericals</span><span class="p">[</span><span class="s2">"body_mass_g"</span><span class="p">]</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="mf">0.25</span><span class="p">)</span>
+<span class="n">lower_bmg_limit</span> <span class="o">=</span> <span class="n">penguins_numericals</span><span class="p">[</span><span class="s2">"body_mass_g"</span><span class="p">]</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="mf">0.25</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="mf">1.5</span> <span class="o">*</span> <span class="n">IQR</span><span class="p">)</span>
+<span class="n">upper_bmg_limit</span> <span class="o">=</span> <span class="n">penguins_numericals</span><span class="p">[</span><span class="s2">"body_mass_g"</span><span class="p">]</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="mf">0.75</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.5</span> <span class="o">*</span> <span class="n">IQR</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"lower limt of IQR = </span><span class="si">{</span><span class="n">lower_bmg_limit</span><span class="si">}</span><span class="s2"> and upper limit of IQR = </span><span class="si">{</span><span class="n">upper_bmg_limit</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Any data points that fall below lower limit or above upper limit are considered outliers, and these points are subsequently removed from dataset.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># check data points larger than the upper limit of the IQR range</span>
+<span class="n">penguins_numericals</span><span class="p">[</span><span class="n">penguins_numericals</span><span class="p">[</span><span class="s2">"BMG_EoD"</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">upper_bmg_limit</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># check data points smaller than the lower limit of the IQR range</span>
+<span class="n">penguins_numericals</span><span class="p">[</span><span class="n">penguins_numericals</span><span class="p">[</span><span class="s2">"body_mass_g"</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">lower_bmg_limit</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class='alert alert-danger'>
+<div class="admonition-what-should-we-actually-do-with-the-outliers questions admonition" id="questions-0">
+<p class="admonition-title"><strong>What should we actually do with the outliers?</strong></p>
+<ul>
+<li><p>It is tempting to say, “We found outliers, so let’s delete them.” But that isn’t necessarily the right decision.</p></li>
+<li><p>Imagine that an unusually heavy penguin is a genuine measurement.</p>
+<ul class="simple">
+<li><p>Removing it would mean throwing away valid information.</p></li>
+<li><p>On the other hand, if we discover that a measurement was entered incorrectly. For example, 35,000 grams instead of 3,500 grams, then removing or correcting that observation may be appropriate.</p></li>
+</ul>
+</li>
+<li><p>The decision can be thought of as three possibilities:</p>
+<ul class="simple">
+<li><p>Retain: The value is unusual but valid.</p></li>
+<li><p>Remove: The value is incorrect, impossible, or inappropriate for the analysis.</p></li>
+<li><p>Transform or cap: The value is valid, but its extreme magnitude has too much influence on the analysis.</p></li>
+</ul>
+</li>
+<li><blockquote>
+<div><p>This is why an outlier is not automatically an error.</p>
+</div></blockquote>
+</li>
+</ul>
+</div>
+</div><div class='alert alert-warning'>
+<div class="admonition-capping-or-winsorizing callout admonition" id="callout-1">
+<p class="admonition-title">Capping or winsorizing</p>
+<p>Instead of deleting extreme observations, another option is to cap them. This means we keep the observation but limit its value to a predefined boundary.
+For the two abnormal values in <code class="docutils literal notranslate"><span class="pre">BMG_EoD</span></code> column, values below the lower boundary are replaced by the lower boundary, and values above the upper boundary are replaced by the upper boundary.
+This approach is sometimes called <strong>winsorizing</strong> when extreme values are replaced with specified percentile-based limits.
+- The advantage is that we don’t lose entire observations.
+- The disadvantage is that we are changing the numerical values, so we need to make sure that this transformation makes sense for our particular analysis.</p>
+</div>
+</div></section>
+</section>
+<section id="scaling-normalizing-numerical-data">
+<h2>4. Scaling &amp; Normalizing Numerical Data<a class="headerlink" href="#scaling-normalizing-numerical-data" title="Link to this heading"></a></h2>
+<p>In many datasets, numerical features can be measured in very different units and ranges.
+For example, in the Penguins dataset, body mass is measured in grams and can range in the thousands, while flipper length is measured in millimeters and typically ranges in the hundreds.
+Both are numerical variables, but their numerical scales are very different. This difference can matter when we use the data for certain types of analysis and machine learning, making features with larger values dominate the learning process, leading to biased and inaccurate models.</p>
+<p>Scaling transforms these features to a common, limited range, such as [0, 1] or a distribution with a mean of 0 and a standard deviation of 1, without distorting the differences in the ranges of values or losing information.</p>
+<p>In this section, we will see why scale matters and then apply two common transformations: <strong>standardization</strong> (Z-score normalization) and <strong>normalization</strong> (min-max scaling). We will compare the original and transformed values so that we can see exactly what these techniques do.</p>
+<section id="standardization-z-score-normalization">
+<h3>4.1 Standardization (Z-score Normalization)<a class="headerlink" href="#standardization-z-score-normalization" title="Link to this heading"></a></h3>
+<p>One of the most common approaches is standardization. Standardization transforms a variable so that it has a mean close to 0 and a standard deviation close to 1.
+It is calculated by subtracting the mean value ($\mu$) of the feature and then dividing by the standard deviation ($\sigma$), and its formula is $X_scaled = \frac{X - \mu}{\sigma}$.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">penguins_BMG</span> <span class="o">=</span> <span class="n">penguins</span><span class="p">[[</span><span class="s2">"body_mass_g"</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">penguins_BMG</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">penguins_BMG</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>We use the <code class="docutils literal notranslate"><span class="pre">StandardScaler</span></code> from scikit-learn to standardize the <code class="docutils literal notranslate"><span class="pre">body_mass_g</span></code> variable. It transforms the data by subtracting the mean and dividing by the standard deviation, resulting in a mean of approximately 0 and a standard deviation of 1. This ensures that the variable is on a consistent scale for machine learning algorithms.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">StandardScaler</span>
+<span class="n">scaler</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span>
+<span class="n">penguins_BMG</span><span class="p">[</span><span class="s2">"BMG_Std"</span><span class="p">]</span> <span class="o">=</span> <span class="n">scaler</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">penguins_BMG</span><span class="p">[[</span><span class="s2">"body_mass_g"</span><span class="p">]])</span>
+<span class="n">penguins_BMG</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># verify the mean and standard deviation of standardized BMG data</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"mean value:"</span><span class="p">,</span> <span class="n">penguins_BMG</span><span class="p">[</span><span class="s2">"BMG_Std"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"standard deviation:"</span><span class="p">,</span> <span class="n">penguins_BMG</span><span class="p">[</span><span class="s2">"BMG_Std"</span><span class="p">]</span><span class="o">.</span><span class="n">std</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="normalization-min-max-scaling">
+<h3>4.2 Normalization (Min-Max Scaling)<a class="headerlink" href="#normalization-min-max-scaling" title="Link to this heading"></a></h3>
+<p>Standardization is not the only option. Another common approach is <strong>min-max normalization</strong>, which transforms values into a specified range, typically [0, 1].
+It is calculated by subtracting the minimum value of the feature and then dividing by the range (max - min), and its formula is $X_scaled = \frac{(X - X_min)}{(X_max - X_min)}$.</p>
+<p>This method is useful when the distribution is not Gaussian or when the algorithm requires input values bounded within a specific range (<em>e.g.</em>, neural networks often use activation functions that expect inputs in the [0,1] range).</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">MinMaxScaler</span>
+<span class="n">minmax_scaler</span> <span class="o">=</span> <span class="n">MinMaxScaler</span><span class="p">()</span>
+
+<span class="n">penguins_BMG</span><span class="p">[</span><span class="s2">"BMG_MinMax"</span><span class="p">]</span> <span class="o">=</span> <span class="n">minmax_scaler</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">penguins_BMG</span><span class="p">[[</span><span class="s2">"body_mass_g"</span><span class="p">]])</span>
+<span class="n">penguins_BMG</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># verify the min and max values of normalized BMG data</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"min value:"</span><span class="p">,</span> <span class="n">penguins_BMG</span><span class="p">[</span><span class="s2">"BMG_MinMax"</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"max value:"</span><span class="p">,</span> <span class="n">penguins_BMG</span><span class="p">[</span><span class="s2">"BMG_MinMax"</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class='alert alert-warning'>
+<div class="admonition-normalization-vs-standardization callout admonition" id="callout-2">
+<p class="admonition-title">Normalization vs. Standardization</p>
+<ul class="simple">
+<li><p>Normalization, such as Min-Max scaling, is useful when features need to be mapped to a specific range, typically between 0 and 1, but it can be <strong>sensitive to outliers</strong> because extreme values affect the minimum and maximum.</p></li>
+<li><p>Standardization transforms data to have a mean of 0 and a standard deviation of 1, making it generally more robust to differences in feature scales, and is less affected by outliers, although it does not restrict values to a fixed range.</p></li>
+</ul>
+<p>Both methods can improve model performance and convergence, but the appropriate choice depends on the data distribution and the requirements of the machine learning algorithm.</p>
+</div>
+</div><div class='alert alert-success'>
+<div class="admonition-exercise exercise important admonition" id="exercise-0">
+<p class="admonition-title">Exercise</p>
+<p>After completing the individual tasks for handling numerical data, it is now time to bring everything together in a hands-on exercise. In this activity, we will work with representative datasets from scikit-learn and apply the data-handling techniques we have learned throughout the episode.</p>
+<ul>
+<li><p><strong>Select a dataset</strong>: Choose one dataset from scikit-learn: Iris, Diabetes, Wine, Breast Cancer, or California Housing.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">datasets</span>
+
+<span class="n">iris</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">load_iris</span><span class="p">(</span><span class="n">as_frame</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">iris_df</span> <span class="o">=</span> <span class="n">iris</span><span class="o">.</span><span class="n">frame</span>
+<span class="n">iris_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+
+<span class="n">diabetes</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">load_diabetes</span><span class="p">(</span><span class="n">as_frame</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">diabetes_df</span> <span class="o">=</span> <span class="n">diabetes</span><span class="o">.</span><span class="n">frame</span>
+<span class="n">diabetes_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+
+<span class="n">wine</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">load_wine</span><span class="p">(</span><span class="n">as_frame</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">wine_df</span> <span class="o">=</span> <span class="n">wine</span><span class="o">.</span><span class="n">frame</span>
+<span class="n">wine_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+
+<span class="n">cancer</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">load_breast_cancer</span><span class="p">(</span><span class="n">as_frame</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">cancer_df</span> <span class="o">=</span> <span class="n">cancer</span><span class="o">.</span><span class="n">frame</span>
+<span class="n">cancer_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+
+<span class="n">housing</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">fetch_california_housing</span><span class="p">(</span><span class="n">as_frame</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">housing_df</span> <span class="o">=</span> <span class="n">housing</span><span class="o">.</span><span class="n">frame</span>
+<span class="n">housing_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Inspect the dataset</strong>: Examine the shape, columns, data types, and first few observations.</p></li>
+<li><p><strong>Remove unnecessary rows and columns</strong>: Identify irrelevant or redundant data and remove it where appropriate.</p></li>
+<li><p><strong>Get statistical information</strong>: Calculate and interpret count, mean, median, minimum, maximum, quartiles, and standard deviation.</p></li>
+<li><p><strong>Check for missing values</strong>: Identify missing values and calculate their counts and percentages.</p></li>
+<li><p><strong>Decide how to handle missing values</strong>: Determine whether to remove observations or impute missing numerical values using an appropriate method.</p></li>
+<li><p><strong>Identify and handle outliers</strong>: Use summary statistics, the IQR method, and visualizations to identify potential outliers, then decide whether to retain, remove, or cap them.</p></li>
+<li><p><strong>Scale or normalize numerical features</strong>: Apply standardization or min-max normalization to selected features and compare the values before and after transformation.</p></li>
+<li><p><strong>Verify the cleaned dataset</strong>: Check the final shape, columns, data types, missing values, ranges, and other relevant properties to confirm that the dataset is ready for further analysis or machine learning.</p></li>
+</ul>
+</div>
+</div><div class='alert alert-info'>
+<div class="admonition-keypoints keypoints admonition" id="keypoints-0">
+<p class="admonition-title">Keypoints</p>
+<ul class="simple">
+<li><p>Get familiar with the Palmer Penguins dataset.</p></li>
+<li><p>Perform statistical analysis and data visualization using Pandas and Seaborn.</p></li>
+<li><p>Identify and handle missing values in numerical features.</p></li>
+<li><p>Identify and handle outliers in the dataset.</p></li>
+<li><p>Apply standardization and normalization techniques to numerical features.</p></li>
+</ul>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../1-getting-to-know-your-data/" class="btn btn-neutral float-left" title="Getting to Know Your Data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../3-processing-categorical-data/" class="btn btn-neutral float-right" title="Processing Categorical Data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright | BlackJack&#39;s Nook | 2026.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
